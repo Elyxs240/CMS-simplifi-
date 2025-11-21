@@ -1,0 +1,44 @@
+services:
+  app:
+    build: .
+    container_name: cms_app
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: cms_simplifie
+      DB_USER: cms
+      DB_PASS: cmspass
+      TZ: Europe/Paris
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+   
+
+
+  db:
+    image: mysql:8.4
+    container_name: cms_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: cms_simplifie
+      MYSQL_USER: cms
+      MYSQL_PASSWORD: cmspass
+      MYSQL_ROOT_PASSWORD: rootpass
+      TZ: Europe/Paris
+    
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql/dump.sql:/docker-entrypoint-initdb.d/00_dump.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -prootpass || exit 1"]
+      interval: 5s
+      timeout: 7s
+      retries: 12
+    
+  
+
+volumes:
+  db_data:
